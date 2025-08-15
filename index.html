@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planejamento de Estágio — Grupos & Excel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f172a;         /* slate-900 */
+      --panel:#111827;      /* gray-900 */
+      --panel-2:#0b1220;    /* darker */
+      --muted:#94a3b8;      /* slate-400 */
+      --text:#e5e7eb;       /* gray-200 */
+      --accent:#ef4444;     /* red-500 */
+      --accent-2:#f87171;   /* red-400 */
+      --ok:#22c55e;         /* green-500 */
+      --warn:#f59e0b;       /* amber-500 */
+      --chip:#1f2937;       /* gray-800 */
+      --card:#0b1220;       /* dark */
+      --border:#1f2937;     /* gray-800 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, "Noto Sans", sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(239,68,68,.18), transparent 60%),
+                  radial-gradient(900px 600px at 120% 10%, rgba(248,113,113,.12), transparent 50%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.1) blur(8px);
+      background:linear-gradient(180deg, rgba(11,18,32,.9), rgba(11,18,32,.6));
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:16px 20px}
+    .title{
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:space-between;
+    }
+    h1{font-size:clamp(20px,4vw,30px); margin:0; letter-spacing:.4px}
+    .sub{color:var(--muted); font-size:14px}
+    .actions{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      appearance:none; border:1px solid var(--border); color:var(--text); background:linear-gradient(180deg,#121b2f,#0c1425);
+      padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600; box-shadow:var(--shadow); transition:.15s ease-in-out transform, .15s opacity;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn[disabled]{opacity:.6; cursor:not-allowed}
+    .btn.accent{background:linear-gradient(180deg,var(--accent),var(--accent-2)); border-color:transparent; color:white}
+    .counter{display:flex; gap:14px; align-items:center; font-size:14px; color:var(--muted)}
+    .dot{width:8px; height:8px; border-radius:999px; background:var(--accent)}
+
+    .layout{display:grid; grid-template-columns: 1fr 320px; gap:18px; align-items:start}
+    @media (max-width: 1050px){ .layout{grid-template-columns: 1fr} }
+
+    /* Legenda (horários) */
+    .legend{
+      position:sticky; top:84px; border:1px solid var(--border); border-radius:16px; padding:14px; background:linear-gradient(180deg,#0e1729,#0b1220); box-shadow:var(--shadow);
+    }
+    .legend h3{margin:0 0 8px 0; font-size:16px}
+    .legend .row{display:grid; grid-template-columns: 100px 1fr; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border)}
+    .legend .row:last-child{border-bottom:none}
+    .legend .p{color:var(--muted); font-size:13px}
+
+    /* Professores e grupos */
+    .prof{
+      border:1px solid var(--border); border-radius:18px; overflow:hidden; background:linear-gradient(180deg,#0e1729,#0b1220);
+    }
+    .prof-hd{display:flex; justify-content:space-between; align-items:baseline; padding:16px; border-bottom:1px solid var(--border)}
+    .prof-hd h2{margin:0; font-size:20px}
+    .prof-hd .meta{color:var(--muted); font-size:13px}
+    .groups{display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; padding:14px}
+    @media (max-width: 1200px){ .groups{grid-template-columns: repeat(2, 1fr)} }
+    @media (max-width: 720px){ .groups{grid-template-columns: 1fr} }
+
+    .card{
+      border:1px solid var(--border); border-radius:16px; padding:12px; background:linear-gradient(180deg,#0b1220,#0a1020); display:flex; flex-direction:column; gap:10px;
+    }
+    .card h4{margin:0; font-size:16px}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .row label{font-size:12px; color:var(--muted)}
+    select, input[type="text"]{
+      background:#0a1427; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:8px 10px; font:inherit;
+    }
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; background:var(--chip); border:1px solid var(--border); border-radius:999px; font-size:13px}
+    .chip button{border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:14px}
+    .cap{height:8px; background:#0d1a2f; border-radius:999px; overflow:hidden; border:1px solid var(--border)}
+    .cap>i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .captext{font-size:12px; color:var(--muted)}
+    .tips{font-size:12px; color:var(--muted)}
+
+    /* Sidebar (alunos disponíveis) */
+    .sidebar{border:1px solid var(--border); border-radius:18px; overflow:hidden; background:linear-gradient(180deg,#0e1729,#0b1220)}
+    .side-hd{padding:12px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border)}
+    .side-hd h3{margin:0; font-size:16px}
+    .side-body{padding:12px; display:grid; gap:10px}
+    .students{display:flex; flex-wrap:wrap; gap:8px}
+
+    .pill{background:#0a1427; border:1px dashed var(--border); color:var(--muted); padding:4px 8px; border-radius:999px; font-size:12px}
+
+    .foot{margin-top:6px; color:var(--muted); font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap title">
+      <div>
+        <h1>Planejamento de Distribuição — Grupos de Estágio</h1>
+        <div class="sub">Máximo de 6 alunos por grupo • Foco nos grupos (professor, tema, horário e integrantes)</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="toggleAlunos">Mostrar alunos disponíveis</button>
+        <button class="btn" id="resetBtn" title="Limpar alocações e voltar ao início" style="display:none">Reiniciar</button>
+        <button class="btn accent" id="exportBtn">Exportar para Excel (.xlsx)</button>
+      </div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="counter">
+      <span class="dot"></span>
+      <span id="contagem">0 de 40 alunos alocados</span>
+      <span class="pill" id="gruposCheios">0 grupos completos</span>
+    </div>
+  </div>
+
+  <div class="wrap layout">
+    <main id="main"></main>
+    <aside>
+      <section class="legend">
+        <h3>Legenda de horários</h3>
+        <div class="row">
+          <strong>Diogo</strong>
+          <div class="p">Quinta-feira, das 08h30 às 12h</div>
+        </div>
+        <div class="row">
+          <strong>Isaura</strong>
+          <div class="p">Quinta e Sexta-feira, das 07h às 09h20</div>
+        </div>
+        <div class="row">
+          <strong>Wilian</strong>
+          <div class="p">Segunda e Sexta-feira, 07h30–09h20 / Sábado, 08h–11h</div>
+        </div>
+        <div class="row">
+          <strong>Milene</strong>
+          <div class="p">Quinta-feira, das 08h às 09h20</div>
+        </div>
+      </section>
+
+      <section class="sidebar" id="sidebar" style="display:none; margin-top:18px">
+        <div class="side-hd">
+          <h3>Alunos disponíveis</h3>
+          <div class="pill" id="restantes">40 restantes</div>
+        </div>
+        <div class="side-body">
+          <input type="text" id="busca" placeholder="Filtrar por nome..." />
+          <div class="students" id="listaAlunos"></div>
+          <div class="foot">Dica: adicione alunos pelos cartões de grupo (seleção "Adicionar aluno"). Aqui você apenas visualiza e pesquisa.</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- SheetJS para exportação xlsx -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+  // ========================= Config Nuven =========================
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyN2mId2W7TY4uxgHoV0uawEgkTrrglBRleqQXzF1RKVk381ie4FAju7uCmj5IF9F-nWQ/exec";
+  const CLOUD_KEY  = "estagio-plano-v1";
+
+  // ========================= Dados =========================
+  const TODOS_ALUNOS = [
+    "ADRIANE GOUVEIA MARQUES DOS SANTOS",
+    "AMANDA CAROLINE BORGES SOUZA DE BELÉM",
+    "AMANDA VENÂNCIO DE SANTANA",
+    "ANA CAROLINA ANTUNES DA SILVA",
+    "ANA JÉSSICA DO CARMO SILVA RODRIGUES DE BRITO",
+    "ANA JULIA OLIVEIRA SILVA",
+    "ANA LUIZA AMORIM VICENTE",
+    "ANA MAXCILENE SEVERIANO",
+    "ANA VITORIA DA ROCHA SOUSA",
+    "ANTONIO MARCOS MARTINS CUNHA",
+    "ARTHUR OLIVEIRA MACHADO",
+    "CRISTHIANE CAMIN NERY",
+    "EDUARDA ABADIA GOMES DE JESUS",
+    "FERNANDA GONÇALVES DOS SANTOS",
+    "GABRIELA NUNES ANDRADE",
+    "GISELE ROGERIO DA SILVA ZANDONÁ",
+    "GUILHERME FREITAS CARVALHO",
+    "HUGO ELIAS ALBERTO MOREIRA ARRUDA",
+    "ISABELLA ILIDIO BRIZOLLA",
+    "JOANA DARC DELFINO DE MENEZES",
+    "KAUANNY ALVES DE MORAIS",
+    "LAURA BARBOSA ALVES",
+    "LUANA OLIVEIRA ZUCHETTI",
+    "LUCAS REIS E SOUSA",
+    "LUÍSA EVANGELISTA NUNES MIRANDA",
+    "MARIA DA CONCEIÇÃO SOUZA DA SILVA",
+    "MARIA EDUARDA DE SANTANA",
+    "MARIA EDUARDA NASCIMENTO RODRIGUES",
+    "MARIA EDUARDA ROCHA DA COSTA",
+    "MARIA JULIA ISMERIA REIS",
+    "MARIANA CARLOS RODRIGUES",
+    "MARITZA MACHADO DE SÁ",
+    "MIRENIA MAGALHAES MESSIAS BATISTA",
+    "NATALIA NABI SILVA MAMERI",
+    "PEDRO GUSTAVO SILVA RIBEIRO",
+    "POLIANA VIEIRA MARQUES NASCIMENTO",
+    "PRISCILA TAVELLI MELO STARLING DE FREITAS",
+    "RAPHAEL CAMILO RIBEIRO",
+    "VALDENICE HELENA DUARTE",
+    "YASMIN ALVES COSTA"
+  ];
+
+  const PROFESSORES = [
+    {nome: 'Diogo', grupos: 3, temas: ['Psicologia do Trabalho','Gestão de Pessoas','Orientação Profissional'], horario: 'Quinta-feira, 08h30–12h'},
+    {nome: 'Milene', grupos: 3, temas: ['Psicologia Comunitária e Defesa dos Direitos Humanos'], horario: 'Quinta-feira, 08h–09h20'},
+    {nome: 'Isaura', grupos: 2, temas: ['Psicologia do Trabalho','Intervenção em saúde do trabalhador'], horario: 'Quinta e Sexta-feira, 07h–09h20'},
+    {nome: 'Wilian', grupos: 2, temas: ['Orientação Profissional','Intervenção em Instituições Sociais','Intervenção em saúde do trabalhador'], horario: 'Seg e Sex 07h30–09h20 / Sáb 08h–11h'}
+  ];
+
+  const LIMITE = 6; // máximo por grupo
+
+  // ===================== Estado & Persistência =====================
+  let state = {
+    groups: [], // {id, professor, index, tema, alunos:[]}
+    assigned: {} // nomeAluno -> groupId
+  };
+
+  function buildInitialState(){
+    const groups = [];
+    PROFESSORES.forEach(p => {
+      for(let i=1;i<=p.grupos;i++){
+        const id = `${p.nome}-${i}`;
+        groups.push({ id, professor:p.nome, index:i, tema:'', alunos:[] });
+      }
+    });
+    state.groups = groups;
+    state.assigned = {};
+  }
+
+  // ---- Local ----
+  function saveLocalOnly(){
+    try { localStorage.setItem('estagio-plano', JSON.stringify(state)); } catch(e){}
+  }
+  function loadLocal(){
+    const raw = localStorage.getItem('estagio-plano');
+    if(!raw) return false;
+    try{
+      const s = JSON.parse(raw);
+      if(Array.isArray(s.groups) && s.assigned && typeof s.assigned === 'object'){
+        state = s; return true;
+      }
+    }catch(e){ console.warn('Falha ao carregar local', e); }
+    return false;
+  }
+
+  // ---- Cloud (Apps Script) ----
+  async function cloudLoad(){
+    try{
+      const url = `${SCRIPT_URL}?action=load&key=${encodeURIComponent(CLOUD_KEY)}`;
+      const r = await fetch(url, { method:'GET', mode:'cors', cache:'no-store' });
+      if(!r.ok) return null;
+      const j = await r.json();
+      if(j && j.ok && j.data){
+        return JSON.parse(j.data);
+      }
+    }catch(e){
+      console.warn('Cloud load falhou', e);
+    }
+    return null;
+  }
+
+  async function cloudSave(){
+    try{
+      const body = new URLSearchParams();
+      body.set('action','save');
+      body.set('key', CLOUD_KEY);
+      body.set('data', JSON.stringify(state));
+      const r = await fetch(SCRIPT_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+        body,
+        mode:'cors'
+      });
+      return r.ok;
+    }catch(e){
+      console.warn('Cloud save falhou', e);
+      return false;
+    }
+  }
+
+  // Debounce para não sobrecarregar a nuvem
+  let saveTimer = null;
+  function save(){
+    saveLocalOnly();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { cloudSave(); }, 800);
+  }
+
+  // =========================== UI ===========================
+  const mainEl = document.getElementById('main');
+
+  function el(tag, attrs={}, children=[]) {
+    const e = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v]) => {
+      if(k === 'class') e.className = v; else if(k==='html') e.innerHTML = v; else e.setAttribute(k,v);
+    });
+    children.forEach(ch => e.appendChild(ch));
+    return e;
+  }
+
+  function getProfessorMeta(nome){ return PROFESSORES.find(p=>p.nome===nome); }
+
+  function unassignedList(){
+    return TODOS_ALUNOS.filter(n => !(n in state.assigned));
+  }
+
+  function render(){
+    mainEl.innerHTML = '';
+
+    // Agrupa por professor
+    const byProf = {};
+    state.groups.forEach(g => { (byProf[g.professor] ||= []).push(g); });
+
+    Object.keys(byProf).forEach(nome => {
+      const profGroups = byProf[nome].sort((a,b)=>a.index-b.index);
+      const meta = getProfessorMeta(nome);
+
+      const header = el('div', {class:'prof-hd'}, [
+        el('div', {}, [ el('h2', {html: `${nome}`}, []), el('div', {class:'meta', html: `${meta.horario} • ${meta.temas.join(' • ')}`}) ]),
+        el('div', {class:'meta', html:`${profGroups.length} grupos`})
+      ]);
+
+      const groupGrid = el('div', {class:'groups'});
+
+      profGroups.forEach(g => {
+        const card = el('div', {class:'card'});
+        card.appendChild(el('h4', {html:`Grupo ${g.index}` }));
+
+        // Tema select
+        const temaRow = el('div', {class:'row'});
+        const temaSel = el('select');
+        temaSel.appendChild(el('option', {value:'', html:'Selecionar temática...'}));
+        meta.temas.forEach(t => temaSel.appendChild(el('option', {value:t, html:t})) );
+        temaSel.value = g.tema || '';
+        temaSel.addEventListener('change', () => { g.tema = temaSel.value; save(); });
+        temaRow.appendChild(el('label', {html:'Temática'}));
+        temaRow.appendChild(temaSel);
+        card.appendChild(temaRow);
+
+        // Adicionar aluno
+        const addRow = el('div', {class:'row'});
+        const addSel = el('select');
+        addSel.appendChild(el('option', {value:'', html:'Adicionar aluno...'}));
+        unassignedList().forEach(n => addSel.appendChild(el('option', {value:n, html:n})));
+        addSel.addEventListener('change', () => {
+          const nome = addSel.value; if(!nome) return;
+          if(g.alunos.length >= LIMITE){ alert(`Este grupo já atingiu o limite de ${LIMITE} alunos.`); addSel.value=''; return; }
+          g.alunos.push(nome); state.assigned[nome] = g.id; addSel.value='';
+          save(); render();
+        });
+        addRow.appendChild(el('label', {html:'Integrantes'}));
+        addRow.appendChild(addSel);
+        card.appendChild(addRow);
+
+        // Chips de alunos
+        const chips = el('div', {class:'chips'});
+        g.alunos.forEach(nome => {
+          const ch = el('span', {class:'chip'});
+          ch.appendChild(document.createTextNode(nome));
+          const rm = el('button', {title:'Remover'});
+          rm.innerHTML = '×';
+          rm.addEventListener('click', () => { removerAluno(nome); });
+          ch.appendChild(rm);
+          chips.appendChild(ch);
+        });
+        card.appendChild(chips);
+
+        // Barra de capacidade
+        const cap = el('div', {class:'cap'});
+        const fill = el('i');
+        fill.style.width = `${(g.alunos.length / LIMITE) * 100}%`;
+        cap.appendChild(fill);
+        card.appendChild(cap);
+        card.appendChild(el('div', {class:'captext', html:`${g.alunos.length}/${LIMITE} alunos` }));
+
+        groupGrid.appendChild(card);
+      });
+
+      const profWrap = el('section', {class:'prof'}, [header, groupGrid]);
+      mainEl.appendChild(profWrap);
+    });
+
+    renderSidebar();
+    updateCounters();
+  }
+
+  function renderSidebar(){
+    const holder = document.getElementById('listaAlunos');
+    if(!holder) return;
+    const filtro = (document.getElementById('busca')?.value || '').trim().toLowerCase();
+    holder.innerHTML = '';
+    unassignedList()
+      .filter(n => n.toLowerCase().includes(filtro))
+      .forEach(n => {
+        const chip = el('span', {class:'chip'});
+        chip.appendChild(document.createTextNode(n));
+        holder.appendChild(chip);
+      });
+    document.getElementById('restantes').textContent = `${unassignedList().length} restantes`;
+  }
+
+  function removerAluno(nome){
+    const gid = state.assigned[nome];
+    if(!gid) return;
+    const g = state.groups.find(x=>x.id===gid);
+    if(!g) return;
+    g.alunos = g.alunos.filter(a => a !== nome);
+    delete state.assigned[nome];
+    save(); render();
+  }
+
+  function updateCounters(){
+    const alocados = Object.keys(state.assigned).length;
+    document.getElementById('contagem').textContent = `${alocados} de ${TODOS_ALUNOS.length} alunos alocados`;
+    const cheios = state.groups.filter(g=>g.alunos.length === LIMITE).length;
+    document.getElementById('gruposCheios').textContent = `${cheios} grupos completos`;
+    document.getElementById('resetBtn').style.display = (alocados>0 || state.groups.some(g=>g.tema)) ? 'inline-flex' : 'none';
+  }
+
+  // ======================= Exportação XLSX =======================
+  function exportarXLSX(){
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Planilha
+    const header = ['Professor','Grupo','Temática','Horário','Aluno 1','Aluno 2','Aluno 3','Aluno 4','Aluno 5','Aluno 6','Qtde Alunos'];
+    const linhas = [header];
+
+    state.groups.sort((a,b)=> a.professor.localeCompare(b.professor) || a.index - b.index)
+      .forEach(g => {
+        const meta = getProfessorMeta(g.professor) || {horario:''};
+        const row = [g.professor, `Grupo ${g.index}`, g.tema || '', meta.horario];
+        for(let i=0;i<LIMITE;i++) row.push(g.alunos[i] || '');
+        row.push(g.alunos.length);
+        linhas.push(row);
+      });
+    const ws = XLSX.utils.aoa_to_sheet(linhas);
+    XLSX.utils.book_append_sheet(wb, ws, 'Planilha');
+
+    // Sheet 2: Alunos não alocados
+    const nao = unassignedList();
+    const ws2 = XLSX.utils.aoa_to_sheet([['Alunos não alocados'], ...nao.map(n=>[n])]);
+    XLSX.utils.book_append_sheet(wb, ws2, 'Nao_Alocados');
+
+    // Sheet 3: Resumo
+    const resumo = [['Professor','Grupos','Temas (referência)','Horário']];
+    PROFESSORES.forEach(p => resumo.push([p.nome, p.grupos, p.temas.join(' / '), p.horario]));
+    resumo.push([]);
+    resumo.push(['Total grupos', state.groups.length]);
+    resumo.push(['Alunos (total)', TODOS_ALUNOS.length]);
+    resumo.push(['Alunos alocados', Object.keys(state.assigned).length]);
+    resumo.push(['Alunos não alocados', unassignedList().length]);
+    const ws3 = XLSX.utils.aoa_to_sheet(resumo);
+    XLSX.utils.book_append_sheet(wb, ws3, 'Resumo');
+
+    const nomeArquivo = 'Planejamento_Estagio.xlsx';
+    XLSX.writeFile(wb, nomeArquivo);
+  }
+
+  // ========================== Eventos ==========================
+  document.getElementById('exportBtn').addEventListener('click', exportarXLSX);
+  document.getElementById('toggleAlunos').addEventListener('click', () => {
+    const sb = document.getElementById('sidebar');
+    const on = sb.style.display !== 'none';
+    sb.style.display = on ? 'none' : 'block';
+    document.getElementById('toggleAlunos').textContent = on ? 'Mostrar alunos disponíveis' : 'Ocultar alunos disponíveis';
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Deseja reiniciar todas as alocações e temáticas?')){
+      buildInitialState(); save(); render();
+    }
+  });
+  document.getElementById('busca')?.addEventListener('input', renderSidebar);
+
+  // ========================= Inicialização =========================
+  async function init(){
+    // 1) tenta carregar da nuvem
+    const cloud = await cloudLoad();
+    if(cloud && Array.isArray(cloud.groups) && cloud.assigned){
+      state = cloud;
+      saveLocalOnly(); // mantém um cache local
+    } else if(!loadLocal()){
+      buildInitialState();
+    }
+    render();
+    // Faz uma gravação inicial assíncrona, garantindo que exista registro na nuvem
+    cloudSave();
+  }
+
+  init();
+  </script>
+</body>
+</html>
